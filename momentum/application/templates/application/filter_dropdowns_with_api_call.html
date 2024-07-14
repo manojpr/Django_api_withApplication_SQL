@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Filter Drop-downs Example</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/simplePagination.js/1.6/simplePagination.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/simplePagination.js/1.6/jquery.simplePagination.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            // Function to fetch and update dropdown options
+            function updateDropdowns(data) {
+                $('#id_business_unit').empty().append($('<option>').text('Select Business Unit').attr('value', ''));
+                $('#id_category').empty().append($('<option>').text('Select Category').attr('value', ''));
+                $('#id_product_line').empty().append($('<option>').text('Select Product Line').attr('value', ''));
+                $('#id_part_type').empty().append($('<option>').text('Select Part Type').attr('value', ''));
+
+                $.each(data.business_units, function(index, value) {
+                    $('#id_business_unit').append($('<option>').text(value).attr('value', value));
+                });
+                $.each(data.categories, function(index, value) {
+                    $('#id_category').append($('<option>').text(value).attr('value', value));
+                });
+                $.each(data.product_lines, function(index, value) {
+                    $('#id_product_line').append($('<option>').text(value).attr('value', value));
+                });
+                $.each(data.part_types, function(index, value) {
+                    $('#id_part_type').append($('<option>').text(value).attr('value', value));
+                });
+
+                // Set the selected values
+                if (data.selected_business_unit) {
+                    $('#id_business_unit').val(data.selected_business_unit);
+                }
+                if (data.selected_category) {
+                    $('#id_category').val(data.selected_category);
+                }
+                if (data.selected_product_line) {
+                    $('#id_product_line').val(data.selected_product_line);
+                }
+                if (data.selected_part_type) {
+                    $('#id_part_type').val(data.selected_part_type);
+                }
+            }
+
+            function updateNewDropdowns(data) {
+                $('#id_brandownername').empty().append($('<option>').text('Select Brand Owner Name').attr('value', ''));
+                $('#id_brandname').empty().append($('<option>').text('Select Brand Name').attr('value', ''));
+                $('#id_subbrandname').empty().append($('<option>').text('Select Sub Brand Name').attr('value', ''));
+
+                $.each(data.brand_owners, function(index, value) {
+                    $('#id_brandownername').append($('<option>').text(value).attr('value', value));
+                });
+                $.each(data.brands, function(index, value) {
+                    $('#id_brandname').append($('<option>').text(value).attr('value', value));
+                });
+                $.each(data.sub_brands, function(index, value) {
+                    $('#id_subbrandname').append($('<option>').text(value).attr('value', value));
+                });
+
+                // Set the selected values if any
+                if (data.selected_brandownername) {
+                    $('#id_brandownername').val(data.selected_brandownername);
+                }
+                if (data.selected_brandname) {
+                    $('#id_brandname').val(data.selected_brandname);
+                }
+                if (data.selected_subbrandname) {
+                    $('#id_subbrandname').val(data.selected_subbrandname);
+                }
+            }
+
+            function fetchNewData() {
+                $.ajax({
+                    url: '/ajax/filter_new_dropdowns/',
+                    type: 'GET',
+                    data: {
+                        'brandownername': $('#id_brandownername').val(),
+                        'brandname': $('#id_brandname').val(),
+                        'subbrandname': $('#id_subbrandname').val()
+                    },
+                    success: function(data) {
+                        updateNewDropdowns(data);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error);
+                    }
+                });
+            }
+
+            function fetchData() {
+                $.ajax({
+                    url: '/ajax/filter_dropdowns/',
+                    type: 'GET',
+                    data: {
+                        'business_unit': $('#id_business_unit').val(),
+                        'category': $('#id_category').val(),
+                        'product_line': $('#id_product_line').val(),
+                        'part_type': $('#id_part_type').val(),
+                        'part_number': $('#id_part_number').val()
+                    },
+                    success: function(data) {
+                        updateDropdowns(data);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error);
+                    }
+                });
+            }
+            
+            function fetchAPIResults(event) {
+                event.preventDefault(); // Prevent default form submission
+                
+                const formData = {
+                    'business_unit': $('#id_business_unit').val(),
+                    'category': $('#id_category').val(),
+                    'product_line': $('#id_product_line').val(),
+                    'part_type': $('#id_part_type').val(),
+                    'part_number': $('#id_part_number').val(),
+                    
+                    'brandownername' : $('#id_brandownername').val(),
+                    'brandname' :$('#id_brandname').val(),
+                    'subbrandname' :$('#id_subbrandname').val()
+                };
+                
+                // Call API for filtered results
+                $.ajax({
+                    url: '/fetch_api_results/?',  // URL to Django view for fetching API results
+                    type: 'GET',
+                    data: formData,
+                    success: function(apiData) {
+                        console.log(apiData);
+                        updateResults(apiData);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('API Error:', error);
+                    }
+                });
+            }
+
+            // Update dropdown options when any dropdown changes
+            $('#id_business_unit, #id_category, #id_product_line, #id_part_type').change(function() {
+                fetchData();
+            });
+
+            // Handle form submission
+            $('#filter_form').submit(function(event) {
+                fetchAPIResults(event); // Fetch API results on form submission
+            });
+
+            // Clear filters button functionality
+            $('#clear_filters').click(function() {
+                $('#filter_form')[0].reset(); // Reset form fields
+                $('#id_business_unit').trigger('change'); // Trigger change event to update dropdowns
+                fetchNewData(); 
+            });
+
+            $('#id_brandownername, #id_brandname, #id_subbrandname').change(function() {
+                fetchNewData();
+            });
+
+            // Fetch initial data for new dropdowns
+            fetchNewData();
+        
+            function updateResults(apiData) {
+                $('#results').empty(); // Clear previous results
+
+                // Create table element
+                let table = $('<table>').attr('border', 1);
+                let thead = $('<thead>');
+                let tbody = $('<tbody>');
+
+                // Append header row
+                let headerRow = $('<tr>');
+                headerRow.append($('<th>').text('Part Number'));
+                headerRow.append($('<th>').text('Part Type Name'));
+                headerRow.append($('<th>').text('Brand Owner Name'));
+                headerRow.append($('<th>').text('Brand Name'));
+                headerRow.append($('<th>').text('Sub Brand Name'));
+                thead.append(headerRow);
+
+                // Append data rows
+                $.each(apiData, function(index, item) {
+                    let row = $('<tr>');
+                    console.log("Item:", item); // Debugging each item
+                    row.append($('<td>').text(item.part_number));
+                    row.append($('<td>').text(item.part_type_name));
+                    row.append($('<td>').text(item.brand_owner_name));
+                    row.append($('<td>').text(item.brand_name));
+                    row.append($('<td>').text(item.sub_brand_name));
+                    tbody.append(row);
+                });
+
+
+                table.append(thead).append(tbody);
+                $('#results').append(table); // Append table to results div
+
+                // Pagination
+                let items = $("tbody tr");
+                let numItems = items.length;
+                let perPage = 10;
+
+                items.slice(perPage).hide();
+
+                $('#pagination-container').pagination({
+                    items: numItems,
+                    itemsOnPage: perPage,
+                    displayedPages: 3,
+                    edges: 1,
+                    prevText: 'Prev',
+                    nextText: 'Next',
+                    onPageClick: function (pageNumber) {
+                        let start = perPage * (pageNumber - 1);
+                        let end = start + perPage;
+
+                        items.hide().slice(start, end).show();
+                    }
+                });
+            }
+        
+        });
+    </script>
+</head>
+<body>
+    <form id="filter_form" method="GET">
+        <!-- Business Unit Drop-down -->
+        <label for="id_business_unit">Business Unit:</label>
+        <select name="business_unit" id="id_business_unit">
+            <option value="">Select Business Unit</option>
+            {% for bu in business_units %}
+                <option value="{{ bu }}">{{ bu }}</option>
+            {% endfor %}
+        </select>
+        
+        <!-- Category Drop-down -->
+        <label for="id_category">Category:</label>
+        <select name="category" id="id_category">
+            <option value="">Select Category</option>
+            {% for cat in categories %}
+                <option value="{{ cat }}">{{ cat }}</option>
+            {% endfor %}
+        </select>
+        
+        <!-- Product Line Drop-down -->
+        <label for="id_product_line">Product Line:</label>
+        <select name="product_line" id="id_product_line">
+            <option value="">Select Product Line</option>
+            {% for pl in product_lines %}
+                <option value="{{ pl }}">{{ pl }}</option>
+            {% endfor %}
+        </select>
+        
+        <!-- Part Type Drop-down -->
+        <label for="id_part_type">Part Type:</label>
+        <select name="part_type" id="id_part_type">
+            <option value="">Select Part Type</option>
+            {% for pt in part_types %}
+                <option value="{{ pt }}">{{ pt }}</option>
+            {% endfor %}
+        </select>
+
+        <!-- Part Number Text Box -->
+        <label for="id_part_number">Part Number:</label>
+        <input type="text" name="part_number" id="id_part_number" placeholder="Enter Part Number">
+        
+        <label for="id_brandownername">Brand Owner Name:</label>
+        <select name="brandownername" id="id_brandownername">
+            <option value="">Select Brand Owner Name</option>
+            {% for bo in brand_owners %}
+                <option value="{{ bo }}">{{ bo }}</option>
+            {% endfor %}
+        </select>
+        
+        <label for="id_brandname">Brand Name:</label>
+        <select name="brandname" id="id_brandname">
+            <option value="">Select Brand Name</option>
+            {% for bn in brands %}
+                <option value="{{ bn }}">{{ bn }}</option>
+            {% endfor %}
+        </select>
+        
+        <label for="id_subbrandname">Sub Brand Name:</label>
+        <select name="subbrandname" id="id_subbrandname">
+            <option value="">Select Sub Brand Name</option>
+            {% for sb in sub_brands %}
+                <option value="{{ sb }}">{{ sb }}</option>
+            {% endfor %}
+        </select>
+
+
+        <input type="button" id="clear_filters" value="Clear Filters">
+        <input type="submit" id="submit_filters" value="Submit">
+    </form>
+
+    <div id="results">
+        <!-- This is where the filtered results will be displayed -->
+    </div>
+    <div id="pagination-container"></div>
+</body>
+</html>

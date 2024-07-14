@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Filter Drop-downs Example</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            function updateDropdowns(data) {
+                $('#id_business_unit').empty().append($('<option>').text('Select Business Unit').attr('value', ''));
+                $('#id_category').empty().append($('<option>').text('Select Category').attr('value', ''));
+                $('#id_product_line').empty().append($('<option>').text('Select Product Line').attr('value', ''));
+                $('#id_part_type').empty().append($('<option>').text('Select Part Type').attr('value', ''));
+
+                $.each(data.business_units, function(index, value) {
+                    $('#id_business_unit').append($('<option>').text(value).attr('value', value));
+                });
+                $.each(data.categories, function(index, value) {
+                    $('#id_category').append($('<option>').text(value).attr('value', value));
+                });
+                $.each(data.product_lines, function(index, value) {
+                    $('#id_product_line').append($('<option>').text(value).attr('value', value));
+                });
+                $.each(data.part_types, function(index, value) {
+                    $('#id_part_type').append($('<option>').text(value).attr('value', value));
+                });
+
+                // Set the selected values
+                if (data.selected_business_unit) {
+                    $('#id_business_unit').val(data.selected_business_unit);
+                }
+                if (data.selected_category) {
+                    $('#id_category').val(data.selected_category);
+                }
+                if (data.selected_product_line) {
+                    $('#id_product_line').val(data.selected_product_line);
+                }
+                if (data.selected_part_type) {
+                    $('#id_part_type').val(data.selected_part_type);
+                }
+            }
+
+            function fetchData() {
+                $.ajax({
+                    url: '/ajax/filter_dropdowns/',
+                    type: 'GET',
+                    data: {
+                        'business_unit': $('#id_business_unit').val(),
+                        'category': $('#id_category').val(),
+                        'product_line': $('#id_product_line').val(),
+                        'part_type': $('#id_part_type').val(),
+                        'part_number': $('#id_part_number').val()
+                    },
+                    success: function(data) {
+                        updateDropdowns(data);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error);
+                    }
+                });
+            }
+
+            $('#id_business_unit, #id_category, #id_product_line, #id_part_type').change(function() {
+                fetchData();
+            });
+
+            $('#id_part_number').on('input', function() {
+                fetchData();
+            });
+
+            $('#clear_filters').click(function() {
+                $('#id_business_unit').val('');
+                $('#id_category').val('');
+                $('#id_product_line').val('');
+                $('#id_part_type').val('');
+                $('#id_part_number').val('');
+                fetchData();
+            });
+        });
+    </script>
+</head>
+<body>
+    <form method="GET">
+        <!-- Business Unit Drop-down -->
+        <label for="id_business_unit">Business Unit:</label>
+        <select name="business_unit" id="id_business_unit">
+            <option value="">Select Business Unit</option>
+            {% for bu in business_units %}
+                <option value="{{ bu }}">{{ bu }}</option>
+            {% endfor %}
+        </select>
+        
+        <!-- Category Drop-down -->
+        <label for="id_category">Category:</label>
+        <select name="category" id="id_category">
+            <option value="">Select Category</option>
+            {% for cat in categories %}
+                <option value="{{ cat }}">{{ cat }}</option>
+            {% endfor %}
+        </select>
+        
+        <!-- Product Line Drop-down -->
+        <label for="id_product_line">Product Line:</label>
+        <select name="product_line" id="id_product_line">
+            <option value="">Select Product Line</option>
+            {% for pl in product_lines %}
+                <option value="{{ pl }}">{{ pl }}</option>
+            {% endfor %}
+        </select>
+        
+        <!-- Part Type Drop-down -->
+        <label for="id_part_type">Part Type:</label>
+        <select name="part_type" id="id_part_type">
+            <option value="">Select Part Type</option>
+            {% for pt in part_types %}
+                <option value="{{ pt }}">{{ pt }}</option>
+            {% endfor %}
+        </select>
+
+        <!-- Part Number Text Box -->
+        <label for="id_part_number">Part Number:</label>
+        <input type="text" name="part_number" id="id_part_number" placeholder="Enter Part Number">
+        
+        <input type="button" id="clear_filters" value="Clear Filters">
+        <input type="submit" value="Submit">
+    </form>
+</body>
+</html>
